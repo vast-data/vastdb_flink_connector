@@ -1,0 +1,39 @@
+services:
+  jobmanager:
+    image: flink:1.18-java17
+    command: jobmanager
+    ports:
+      - "8081:8081"
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        jobmanager.memory.process.size: 2048m
+        taskmanager.numberOfTaskSlots: 4
+        parallelism.default: 1
+        env.java.opts: --add-opens=java.base/java.nio=ALL-UNNAMED
+    volumes:
+      - ./target:/opt/flink/usrlib
+
+  taskmanager:
+    image: flink:1.18-java17
+    command: taskmanager
+    depends_on:
+      - jobmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        taskmanager.numberOfTaskSlots: 4
+        taskmanager.memory.process.size: 2048m
+        parallelism.default: 1
+        env.java.opts: --add-opens=java.base/java.nio=ALL-UNNAMED
+    volumes:
+      - ./target:/opt/flink/usrlib
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G

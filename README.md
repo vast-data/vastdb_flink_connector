@@ -1,92 +1,173 @@
-# vastdb_flink_connector
+# Apache Flink VastDB Connector
 
+This project provides an MVP (Minimum Viable Product) implementation of an Apache Flink Sink for VastDB, allowing you to integrate Apache Flink data pipelines with VastDB storage.
 
+## Overview
 
-## Getting started
+The Apache Flink VastDB Connector enables you to write data from Flink pipelines directly to VastDB tables. It uses Apache Arrow as the intermediate representation format to efficiently transfer data between Flink and VastDB.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Features
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- Write Flink DataStream data to VastDB tables
+- Automatic schema conversion between Flink and Arrow
+- Support for batched writes to improve performance
+- Custom sink connector (VastDbSink) for simplified pipeline integration
+- Automatic table and schema creation
 
-## Add your files
+## Prerequisites
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+- Java 17+
+- Maven
+- VastDB credentials (AWS access keys)
+
+### Important Note on Java Requirements
+
+Apache Arrow, which is used by this connector, requires specific JVM options when running on Java 9 or newer:
 
 ```
-cd existing_repo
-git remote add origin https://git.vastdata.com/chris.snow/vastdb_flink_connector.git
-git branch -M main
-git push -uf origin main
+--add-opens=java.base/java.nio=ALL-UNNAMED
 ```
 
-## Integrate with your tools
+This is because Arrow needs to access some internal JVM memory features that are restricted by default in the Java module system.
 
-- [ ] [Set up project integrations](https://git.vastdata.com/chris.snow/vastdb_flink_connector/-/settings/integrations)
+## Quick Start
 
-## Collaborate with your team
+### Build the Project
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+```bash
+mvn clean package
+```
 
-## Test and Deploy
+### Run the Example
 
-Use the built-in continuous integration in GitLab.
+#### Option 1: Local Standalone Example
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+To run the standalone example, use the provided script:
 
-***
+```bash
+# Set environment variables
+export ENDPOINT="https://your-vastdb-endpoint"
+export AWS_ACCESS_KEY_ID="your-access-key-id"
+export AWS_SECRET_ACCESS_KEY="your-secret-access-key"
 
-# Editing this README
+# Make the script executable
+chmod +x run-flink-local.sh
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+# Run the example
+./run-flink-local.sh
+```
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+You can also customize the schema name and table name:
 
-## Name
-Choose a self-explaining name for your project.
+```bash
+./run-flink-local.sh "your-schema" "your-table" 100
+```
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+#### Option 2: Using Docker with Flink
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+For a more production-like setup using Docker:
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+```bash
+# Set environment variables
+export ENDPOINT="https://your-vastdb-endpoint"
+export AWS_ACCESS_KEY_ID="your-access-key-id"
+export AWS_SECRET_ACCESS_KEY="your-secret-access-key"
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+# Make the script executable
+chmod +x run-flink-docker.sh
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+# Run with Docker
+./run-flink-docker.sh
+```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+This will start a Flink cluster using Docker Compose and submit the job to it.
+Access the Flink Dashboard at http://localhost:8081 to monitor your job.
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+## Example Applications
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+The project includes two example applications:
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+1. **FlinkVastDbExample** - A standalone example that directly uses the VastDB sink writer without requiring a Flink cluster. This is useful for quick testing and development.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+2. **FlinkVastDbJobExample** - A Flink job example that is meant to be deployed to a Flink cluster. This demonstrates how to use the connector in a real Flink environment.
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+For detailed instructions on running the connector in various Flink environments (standalone cluster, YARN, Kubernetes), see [RUNNING.md](RUNNING.md).
+
+## Usage in Your Application
+
+### Basic Usage
+
+```java
+// Define your schema
+DataType rowDataType = DataTypes.ROW(
+        DataTypes.FIELD("field1", DataTypes.STRING()),
+        DataTypes.FIELD("field2", DataTypes.INT())
+);
+
+// Convert to Arrow schema
+DefaultVastDbSchemaConverter schemaConverter = new DefaultVastDbSchemaConverter();
+Schema arrowSchema = schemaConverter.toArrowSchema(rowDataType);
+
+// Write to VastDB
+dataStream.sinkTo(
+        VastDbSink.<Row>builder()
+                .withEndpoint("your-vastdb-endpoint")
+                .withCredentials("your-access-key-id", "your-secret-key")
+                .withSchema("your-schema")
+                .withTable("your-table")
+                .withBatchSize(100)
+                .withArrowSchema(arrowSchema)
+                .withElementConverter(new RowVastDbElementConverter())
+                .build()
+);
+```
+
+### Custom Data Types
+
+For custom data types, implement the `VastDbElementConverter` interface:
+
+```java
+public class MyCustomTypeConverter implements VastDbElementConverter<MyCustomType> {
+    @Override
+    public void convert(MyCustomType element, List<FieldVector> vectors, int rowIndex) {
+        // Convert your custom type to Arrow vectors
+        // Example:
+        ((VarCharVector) vectors.get(0)).set(rowIndex, new Text(element.getField1()));
+        ((IntVector) vectors.get(1)).set(rowIndex, element.getField2());
+    }
+}
+```
+
+## Known Issues
+
+### Arrow Memory Leak Warning
+
+You may see a warning like:
+```
+Memory was leaked by query. Memory leaked: (XXXXX)
+```
+
+This is a known issue with Apache Arrow's memory management in certain situations. The warning doesn't affect the actual functionality of the connector - data is still successfully written to VastDB.
+
+We've implemented a workaround that suppresses this warning in production use. If you're concerned about memory usage in long-running applications, consider:
+
+1. Using smaller batch sizes (e.g., 50 or 100)
+2. Ensuring Flink has sufficient memory allocated
+3. Monitoring memory usage in your Flink application
+
+## Architecture
+
+The project consists of the following main components:
+
+- `VastDbSink`: A Flink sink connector for integrating VastDB with Apache Flink
+- `VastDbSinkWriter`: Implementation of the Flink SinkWriter interface for VastDB
+- `VastDbSchemaConverter`: Interface for converting between Flink and Arrow schemas
+- `DefaultVastDbSchemaConverter`: Default implementation of the schema converter
+- `VastDbElementConverter`: Interface for converting elements from Flink to Arrow
+- `RowVastDbElementConverter`: Converter implementation for Flink Row objects
+- `VastDbUtils`: Helper methods for VastDB operations
+- `VastDbPipelineOptions`: Configuration options for the connector
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This project is licensed under the Apache License 2.0.
